@@ -1,0 +1,13 @@
+*.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+
+# Docker
+*.log
+.vscode/settings.json
+diagrams/smart_workflow_automation_diagram.drawio

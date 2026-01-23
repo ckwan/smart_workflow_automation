@@ -1,0 +1,43 @@
+services:
+  api:
+    build: .
+    container_name: smart_workflow_automation_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --reload
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    depends_on:
+      - rabbitmq
+      - postgres
+
+  worker:
+    build: .
+    container_name: smart_workflow_automation_worker
+    command: celery -A app.workers.tasks.celery_app worker --loglevel=info
+    depends_on:
+      - rabbitmq
+      - postgres
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: smart_workflow_automation_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"      # AMQP port
+      - "15672:15672"    # RabbitMQ management UI
+
+  postgres:
+    image: postgres:15
+    container_name: smart_workflow_automation_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
