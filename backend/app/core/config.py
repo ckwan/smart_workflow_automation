@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     RABBITMQ_DEFAULT_PASS: str
     REDIS_URL: str
     API_PORT: int
+    SMTP_USER: str
+    SMTP_PASS: str
 
     # Tell Pydantic to load from .env
     # model_config = SettingsConfigDict(env_file="../.env", case_sensitive=True)
