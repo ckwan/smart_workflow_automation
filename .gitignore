@@ -10,4 +10,4 @@ __pycache__/
 # Docker
 *.log
 .vscode/settings.json
-diagrams/smart_workflow_automation_diagram.drawio
+diagrams/smark_workflow_automation.drawio

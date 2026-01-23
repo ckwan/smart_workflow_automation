@@ -30,3 +30,9 @@ By combining asynchronous processing, AI agents, and workflow orchestration, the
 
 - **Structured Task Management & Notifications**
   Persists extracted tasks in PostgreSQL and notifies stakeholders via Slack, email, or webhooks in real time.
+
+
+## Smart Workflow Automation System Design Diagram
+![Smart Workflow Automation System Design Diagram](diagrams/smart_workflow_automation.png)
+
+---

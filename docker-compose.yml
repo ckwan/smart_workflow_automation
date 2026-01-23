@@ -1,18 +1,22 @@
 services:
   api:
-    build: .
+    build: ./backend
     container_name: smart_workflow_automation_api
     command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --reload
     ports:
       - "${API_PORT}:${API_PORT}"
+    env_file:
+      - ./.env
     depends_on:
       - rabbitmq
       - postgres
 
   worker:
-    build: .
+    build: ./backend
     container_name: smart_workflow_automation_worker
     command: celery -A app.workers.tasks.celery_app worker --loglevel=info
+    env_file:
+      - ./.env
     depends_on:
       - rabbitmq
       - postgres
@@ -23,6 +27,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    env_file:
+      - ./.env
     ports:
       - "5672:5672"      # AMQP port
       - "15672:15672"    # RabbitMQ management UI
