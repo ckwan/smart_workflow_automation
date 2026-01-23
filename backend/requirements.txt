@@ -8,3 +8,9 @@ pydantic
 python-dotenv
 pydantic-settings
 redis
+pytest
+pytest-cov
+pytest-asyncio
+httpx
+pytest-mock
+dspy-ai
