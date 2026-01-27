@@ -10,6 +10,32 @@ services:
     depends_on:
       - rabbitmq
       - postgres
+      - ollama-server
+    networks:
+      - workflow-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  mlflow:
+    build: ./backend
+    container_name: smart_workflow_automation_mlflow
+    command: mlflow ui --host 0.0.0.0 --port 5001 --backend-store-uri ./mlruns
+    networks:
+      - workflow-network
+    ports:
+      - "5001:5001"
+    volumes:
+      - .:/app
+    depends_on:
+      - api
+
+  ollama-server:
+    image: ollama/ollama
+    command: /bin/ollama serve
+    networks:
+      - workflow-network
+    ports:
+      - "11434:11434"
 
   worker:
     build: ./backend
@@ -20,6 +46,8 @@ services:
     depends_on:
       - rabbitmq
       - postgres
+    networks:
+      - workflow-network
 
   rabbitmq:
     image: rabbitmq:4-management
@@ -29,6 +57,8 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     env_file:
       - ./.env
+    networks:
+      - workflow-network
     ports:
       - "5672:5672"      # AMQP port
       - "15672:15672"    # RabbitMQ management UI
@@ -37,9 +67,12 @@ services:
     image: postgres:15
     container_name: smart_workflow_automation_postgres
     environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - workflow-network
     ports:
       - "5432:5432"
     volumes:
@@ -48,8 +81,15 @@ services:
   redis:
     image: redis:7
     container_name: smart_workflow_automation_redis
+    networks:
+      - workflow-network
     ports:
       - "6379:6379"
 
 volumes:
   postgres_data:
+
+
+networks:
+  workflow-network:
+    driver: bridge

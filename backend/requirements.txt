@@ -13,4 +13,6 @@ pytest-cov
 pytest-asyncio
 httpx
 pytest-mock
-dspy-ai
+dspy
+ollama
+mlflow
