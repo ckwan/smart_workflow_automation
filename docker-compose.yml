@@ -86,9 +86,29 @@ services:
     ports:
       - "6379:6379"
 
+
+  airflow:
+      image: apache/airflow:2.8.1
+      container_name: smart_workflow_automation_airflow
+      depends_on:
+        - postgres
+      command: >
+        bash -c "airflow db init &&
+                airflow users create --username ${AIRFLOW_USERNAME} --password ${AIRFLOW_PASSWORD} --firstname ${AIRFLOW_FIRST_NAME} --lastname ${AIRFLOW_LAST_NAME} --role ${AIRFLOW_ROLE} --email ${AIRFLOW_EMAIL} &&
+                airflow webserver"
+      volumes:
+        - ./dags:/app/airflow/dags
+        - ./logs:/app/airflow/logs
+        - ./plugins:/app/airflow/plugins
+        - ./app:/backend  # your code folder
+      ports:
+        - "8080:8080"
+      restart: always
+      networks:
+        - workflow-network
+
 volumes:
   postgres_data:
-
 
 networks:
   workflow-network:
