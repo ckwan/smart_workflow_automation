@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 
@@ -21,3 +21,20 @@ class TaskCreate(BaseModel):
 class TaskResponse(TaskCreate):
     id: int
     created_at: datetime
+
+
+class TaskSchema(BaseModel):
+    title: str
+    description: str
+    priority: str = Field(..., pattern="^(low|medium|high)$")
+    due_date: Optional[datetime] = None
+    assignee: Optional[str] = None
+
+    @field_validator("assignee")
+    def validate_email(cls, v):
+        if v and "@" not in v:
+            raise ValueError("assignee must be a valid email")
+        return v
+
+class TasksOutput(BaseModel):
+    tasks: List[TaskSchema]

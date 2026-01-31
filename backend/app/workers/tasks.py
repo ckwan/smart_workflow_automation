@@ -1,9 +1,13 @@
-from celery import Celery
+from sqlalchemy import create_engine
+from app.config import DATABASE_URL, get_db
+from celery import Celery, shared_task
 from app.core.config import settings
 from app.workers.ai_pipeline import extract_tasks_from_text
-from app.db import crud, session
+from app.db import crud
 from app.db.models import Base
-from sqlalchemy.orm import Session
+from app.workers.ai_pipeline import extract_tasks_from_text
+from app.db.crud import create_task
+from app.notifications.slack import send_slack_notification
 
 # Celery config
 celery_app = Celery(
@@ -12,9 +16,10 @@ celery_app = Celery(
     backend=settings.REDIS_URL,
 )
 
-# Ensure DB tables exist
-Base.metadata.create_all(bind=session.engine)
+engine = create_engine(DATABASE_URL)
 
+# Ensure DB tables exist
+Base.metadata.create_all(engine)
 
 @celery_app.task(name="process_message")
 def process_message(payload: dict):
@@ -27,7 +32,7 @@ def process_message(payload: dict):
     content = payload.get("content", "")
     tasks = extract_tasks_from_text(content)
 
-    db: Session = session.SessionLocal()
+    db = next(get_db())
     persisted_tasks = []
 
     try:
@@ -43,3 +48,23 @@ def process_message(payload: dict):
         "task_ids": persisted_tasks,
         "message_source": payload.get("source", "unknown"),
     }
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def process_email_task(self, email_text):
+    try:
+        persisted_tasks = []
+        tasks = extract_tasks_from_text(email_text)
+        for task in tasks:
+            db_task = create_task(task)
+            if db_task:  # Ensure task was created successfully
+                persisted_tasks.append(db_task.id)
+            send_slack_notification(task)
+
+        return {
+            "status": "processed",
+            "task_ids": persisted_tasks,
+            "message_source": payload.get("source", "unknown"),
+        }
+    except Exception as e:
+        print("Celery task failed:", e)
+        raise self.retry(exc=e)
